@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enquete com Mapa</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map { height: 500px; }
+        .resultado { margin-top: 20px; padding: 10px; background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Clique nos locais desejados</h1>
+    <div id="map"></div>
+    <button onclick="calcularPontoMedio()">Calcular Ponto Médio</button>
+    <div id="resultado" class="resultado"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Inicializa o mapa
+        const map = L.map('map').setView([-15.788, -47.879], 4);
+        let marcadores = [];
+        
+        // Adiciona camada do mapa
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Adiciona marcadores ao clicar
+        map.on('click', function(e) {
+            const novoMarcador = L.marker(e.latlng).addTo(map);
+            marcadores.push(e.latlng);
+            atualizarContador();
+        });
+
+        function atualizarContador() {
+            document.getElementById('resultado').innerHTML = 
+                `Locais selecionados: ${marcadores.length}`;
+        }
+
+        function calcularPontoMedio() {
+            if(marcadores.length === 0) {
+                alert("Selecione pelo menos um local!");
+                return;
+            }
+
+            // Calcula a média das coordenadas
+            let latTotal = 0;
+            let lngTotal = 0;
+            
+            marcadores.forEach(marcador => {
+                latTotal += marcador.lat;
+                lngTotal += marcador.lng;
+            });
+
+            const centro = {
+                lat: latTotal / marcadores.length,
+                lng: lngTotal / marcadores.length
+            };
+
+            // Limpa marcadores anteriores
+            map.eachLayer(layer => {
+                if(layer instanceof L.Marker) map.removeLayer(layer);
+            });
+
+            // Adiciona novo marcador do ponto médio
+            L.marker(centro, {color: 'red'}).addTo(map)
+                .bindPopup("Ponto Médio")
+                .openPopup();
+
+            // Centraliza o mapa no ponto médio
+            map.setView(centro, 12);
+            
+            // Mostra coordenadas
+            document.getElementById('resultado').innerHTML = 
+                `Ponto Médio calculado:<br>
+                Latitude: ${centro.lat.toFixed(4)}<br>
+                Longitude: ${centro.lng.toFixed(4)}`;
+        }
+    </script>
+</body>
+</html>
